@@ -30,6 +30,7 @@ const DriverDashboardScreen: React.FC = () => {
     });
     
     const [cart, setCart] = useState<Record<string, number>>({}); // ProductID -> Quantity
+    const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
     
     const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
     const [showSaleSuccessModal, setShowSaleSuccessModal] = useState(false);
@@ -289,121 +290,141 @@ const DriverDashboardScreen: React.FC = () => {
 
                     <div className="xl:col-span-2 space-y-6">
                          <Card className="bg-gradient-to-br from-card to-accent/5">
-                            <CardContent className="p-6">
-                                <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label htmlFor="coconutsCarried" className="text-sm font-medium text-foreground/70 block mb-2">
-                                                    Coconuts Carried
-                                                </label>
-                                                <NumberInput 
-                                                    id="coconutsCarried"
-                                                    value={driverData?.coconutsCarried || 0}
-                                                    onChange={(value) => updateDriverData({ coconutsCarried: value })}
-                                                    className="w-full"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label htmlFor="changeAmount" className="text-sm font-medium text-foreground/70 block mb-2">
-                                                    Change Amount
-                                                </label>
-                                                <NumberInput 
-                                                    id="changeAmount"
-                                                    value={driverData?.changeAmount || 0}
-                                                    onChange={(value) => updateDriverData({ changeAmount: value })}
-                                                    className="w-full"
-                                                />
-                                            </div>
-                                        </div>
-                                        <Button 
-                                            onClick={async () => {
-                                                if (!driverDetails?.id) return;
-                                                try {
-                                                    setIsSaving(true);
-                                                    await updateDriverDailySetup(
-                                                        driverDetails.id,
-                                                        driverData.coconutsCarried || 0,
-                                                        driverData.changeAmount || 0
-                                                    );
-                                                    setShowStartingValuesSuccessModal(true);
-                                                    setTimeout(() => setShowStartingValuesSuccessModal(false), 2000);
-                                                } catch (err) {
-                                                    console.error('Error saving starting values:', err);
-                                                } finally {
-                                                    setIsSaving(false);
-                                                }
-                                            }}
-                                            className="w-full"
-                                            disabled={isSaving}
-                                        >
-                                            {isSaving ? 'Saving...' : 'Save Starting Values'}
-                                        </Button>
-                                    </div>
-
-                                    {isEditingLocation ? (
+                            <CardHeader className="cursor-pointer select-none" onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg">Driver Settings</CardTitle>
+                                    <svg 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        strokeWidth={1.5} 
+                                        stroke="currentColor" 
+                                        className={`w-5 h-5 transition-transform ${isSettingsExpanded ? 'rotate-180' : ''}`}
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {currentAssignment ? `Current Location: ${currentAssignment.name}` : 'No location assigned'}
+                                </p>
+                            </CardHeader>
+                            {isSettingsExpanded && (
+                                <CardContent className="p-6">
+                                    <div className="space-y-6">
                                         <div className="space-y-4">
-                                            <div>
-                                                <h3 className="text-lg font-semibold mb-4">Select Location</h3>
-                                                <Select 
-                                                    id="location" 
-                                                    value={selectedLocationId} 
-                                                    onChange={(e) => setSelectedLocationId(e.target.value)}
-                                                    className="w-full"
-                                                >
-                                                    <option value="" disabled>Choose a new location...</option>
-                                                    {availableLocations.map(loc => (
-                                                        <option key={loc.id} value={loc.id}>{loc.name}</option>
-                                                    ))}
-                                                </Select>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label htmlFor="coconutsCarried" className="text-sm font-medium text-foreground/70 block mb-2">
+                                                        Coconuts Carried
+                                                    </label>
+                                                    <NumberInput 
+                                                        id="coconutsCarried"
+                                                        value={driverData?.coconutsCarried || 0}
+                                                        onChange={(value) => updateDriverData({ coconutsCarried: value })}
+                                                        className="w-full"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label htmlFor="changeAmount" className="text-sm font-medium text-foreground/70 block mb-2">
+                                                        Change Amount
+                                                    </label>
+                                                    <NumberInput 
+                                                        id="changeAmount"
+                                                        value={driverData?.changeAmount || 0}
+                                                        onChange={(value) => updateDriverData({ changeAmount: value })}
+                                                        className="w-full"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="flex justify-end gap-2 pt-2">
-                                                <Button 
-                                                    variant="secondary" 
-                                                    size="sm"
-                                                    onClick={() => setIsEditingLocation(false)}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button 
-                                                    size="sm"
-                                                    onClick={handleLocationChangeConfirm} 
-                                                    disabled={!selectedLocationId}
-                                                >
-                                                    Confirm Change
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <h3 className="text-sm font-medium text-foreground/70 mb-2">Current Assignment</h3>
-                                            <button 
-                                                onClick={() => { 
-                                                    if (currentAssignment) {
-                                                        setIsEditingLocation(true); 
-                                                        setSelectedLocationId(currentAssignment.id);
+                                            <Button 
+                                                onClick={async () => {
+                                                    if (!driverDetails?.id) return;
+                                                    try {
+                                                        setIsSaving(true);
+                                                        await updateDriverDailySetup(
+                                                            driverDetails.id,
+                                                            driverData.coconutsCarried || 0,
+                                                            driverData.changeAmount || 0
+                                                        );
+                                                        setShowStartingValuesSuccessModal(true);
+                                                        setTimeout(() => setShowStartingValuesSuccessModal(false), 2000);
+                                                    } catch (err) {
+                                                        console.error('Error saving starting values:', err);
+                                                    } finally {
+                                                        setIsSaving(false);
                                                     }
                                                 }}
-                                                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors duration-200 ${currentAssignment ? 'hover:bg-accent/10 active:bg-accent/20 cursor-pointer' : 'cursor-default'}`}
-                                                disabled={!currentAssignment}
+                                                className="w-full"
+                                                disabled={isSaving}
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-accent flex-shrink-0">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                                                </svg>
-                                                <span className="font-semibold text-lg">
-                                                    {currentAssignment ? currentAssignment.name : 'Unassigned'}
-                                                </span>
-                                                {currentAssignment && (
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 ml-1 text-accent/70">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                                    </svg>
-                                                )}
-                                            </button>
+                                                {isSaving ? 'Saving...' : 'Save Starting Values'}
+                                            </Button>
                                         </div>
-                                    )}
-                                </div>
-                            </CardContent>
+
+                                        {isEditingLocation ? (
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <h3 className="text-lg font-semibold mb-4">Select Location</h3>
+                                                    <Select 
+                                                        id="location" 
+                                                        value={selectedLocationId} 
+                                                        onChange={(e) => setSelectedLocationId(e.target.value)}
+                                                        className="w-full"
+                                                    >
+                                                        <option value="" disabled>Choose a new location...</option>
+                                                        {availableLocations.map(loc => (
+                                                            <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                                        ))}
+                                                    </Select>
+                                                </div>
+                                                <div className="flex justify-end gap-2 pt-2">
+                                                    <Button 
+                                                        variant="secondary" 
+                                                        size="sm"
+                                                        onClick={() => setIsEditingLocation(false)}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button 
+                                                        size="sm"
+                                                        onClick={handleLocationChangeConfirm} 
+                                                        disabled={!selectedLocationId}
+                                                    >
+                                                        Confirm Change
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <h3 className="text-sm font-medium text-foreground/70 mb-2">Current Assignment</h3>
+                                                <button 
+                                                    onClick={() => { 
+                                                        if (currentAssignment) {
+                                                            setIsEditingLocation(true); 
+                                                            setSelectedLocationId(currentAssignment.id);
+                                                        }
+                                                    }}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors duration-200 ${currentAssignment ? 'hover:bg-accent/10 active:bg-accent/20 cursor-pointer' : 'cursor-default'}`}
+                                                    disabled={!currentAssignment}
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-accent flex-shrink-0">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                                    </svg>
+                                                    <span className="font-semibold text-lg">
+                                                        {currentAssignment ? currentAssignment.name : 'Unassigned'}
+                                                    </span>
+                                                    {currentAssignment && (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 ml-1 text-accent/70">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            )}
                         </Card>
 
                          <Card>

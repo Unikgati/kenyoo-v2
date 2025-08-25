@@ -26,28 +26,27 @@ export const useDriverData = (driverId: string | undefined) => {
             setup => setup.driver_id === driverId && setup.date === todayStr
         );
 
+        // Hapus data localStorage yang lama
+        localStorage.removeItem(`${DRIVER_DATA_KEY}_${driverId}`);
+        
         if (setupData) {
             // Jika ada data di Supabase, gunakan itu
             setData({
                 coconutsCarried: setupData.coconuts_carried,
                 changeAmount: setupData.change_amount,
             });
-            // Simpan juga ke localStorage
+            // Simpan ke localStorage dengan timestamp
             localStorage.setItem(`${DRIVER_DATA_KEY}_${driverId}`, JSON.stringify({
                 coconutsCarried: setupData.coconuts_carried,
                 changeAmount: setupData.change_amount,
+                date: todayStr // Tambahkan tanggal
             }));
         } else {
-            // Jika tidak ada di Supabase, cek localStorage
-            const savedData = localStorage.getItem(`${DRIVER_DATA_KEY}_${driverId}`);
-            if (savedData) {
-                try {
-                    const parsedData = JSON.parse(savedData);
-                    setData(parsedData);
-                } catch (error) {
-                    console.error('Error parsing driver data:', error);
-                }
-            }
+            // Reset data ke nilai default
+            setData({
+                coconutsCarried: 0,
+                changeAmount: 0,
+            });
         }
     }, [driverId, driverDailySetup]); // Tambahkan driverDailySetup sebagai dependency
 
